@@ -108,11 +108,13 @@ newznabProviderList = []
 torrentRssProviderList = []
 metadata_provider_dict = {}
 
+MODULE_UPDATE_STRING = None
 NEWEST_VERSION_STRING = None
 VERSION_NOTIFY = False
 AUTO_UPDATE = False
 NOTIFY_ON_UPDATE = False
 CUR_COMMIT_HASH = None
+EXT_UPDATES = False
 BRANCH = ''
 GIT_REMOTE = ''
 CUR_COMMIT_BRANCH = ''
@@ -331,6 +333,8 @@ XBMC_UPDATE_ONLYFIRST = False
 XBMC_HOST = ''
 XBMC_USERNAME = None
 XBMC_PASSWORD = None
+
+QUEUE_UPDATE_LIBRARY = []
 
 USE_NMJ = False
 NMJ_HOST = None
@@ -572,7 +576,7 @@ def initialize(console_logging=True):
         global __INITIALIZED__, showList, providerList, newznabProviderList, torrentRssProviderList, \
             WEB_HOST, WEB_ROOT, ACTUAL_CACHE_DIR, CACHE_DIR, ZONEINFO_DIR, ADD_SHOWS_WO_DIR, CREATE_MISSING_SHOW_DIRS, \
             RECENTSEARCH_STARTUP, NAMING_FORCE_FOLDERS, SOCKET_TIMEOUT, DEBUG, INDEXER_DEFAULT, CONFIG_FILE, \
-            REMOVE_FILENAME_CHARS, IMPORT_DEFAULT_CHECKED_SHOWS, WANTEDLIST_CACHE
+            REMOVE_FILENAME_CHARS, IMPORT_DEFAULT_CHECKED_SHOWS, WANTEDLIST_CACHE, MODULE_UPDATE_STRING, EXT_UPDATES
         # Schedulers
         # global traktCheckerScheduler
         global recentSearchScheduler, backlogSearchScheduler, showUpdateScheduler, \
@@ -709,6 +713,8 @@ def initialize(console_logging=True):
 
         # current commit hash
         CUR_COMMIT_HASH = check_setting_str(CFG, 'General', 'cur_commit_hash', '')
+        EXT_UPDATES = (35 > len(CUR_COMMIT_HASH) or not bool(re.match('^[a-z0-9]+$', CUR_COMMIT_HASH))) and \
+            ('docker/other', 'snap')['snap' in CUR_COMMIT_HASH]
 
         # current commit branch
         CUR_COMMIT_BRANCH = check_setting_str(CFG, 'General', 'cur_commit_branch', '')
@@ -734,7 +740,7 @@ def initialize(console_logging=True):
 
         THEME_NAME = check_setting_str(CFG, 'GUI', 'theme_name', 'dark')
         GUI_NAME = check_setting_str(CFG, 'GUI', 'gui_name', 'slick')
-        DEFAULT_HOME = check_setting_str(CFG, 'GUI', 'default_home', 'home')
+        DEFAULT_HOME = check_setting_str(CFG, 'GUI', 'default_home', 'episodes')
         FANART_LIMIT = check_setting_int(CFG, 'GUI', 'fanart_limit', 3)
         FANART_PANEL = check_setting_str(CFG, 'GUI', 'fanart_panel', 'highlight2')
         FANART_RATINGS = check_setting_str(CFG, 'GUI', 'fanart_ratings', None)
@@ -931,8 +937,9 @@ def initialize(console_logging=True):
                        or check_setting_str(CFG, 'NZBget', 'nzbget_host', ''))
         NZBGET_USE_HTTPS = (bool(check_setting_int(CFG, 'NZBGet', 'nzbget_use_https', 0))
                             or bool(check_setting_int(CFG, 'NZBget', 'nzbget_use_https', 0)))
-        NZBGET_PRIORITY = (check_setting_int(CFG, 'NZBGet', 'nzbget_priority', 0)
-                           or check_setting_int(CFG, 'NZBget', 'nzbget_priority', 100))
+        NZBGET_PRIORITY = check_setting_int(CFG, 'NZBGet', 'nzbget_priority', None)
+        if None is NZBGET_PRIORITY:
+            NZBGET_PRIORITY = check_setting_int(CFG, 'NZBget', 'nzbget_priority', 100)
         NZBGET_MAP = check_setting_str(CFG, 'NZBGet', 'nzbget_map', '')
 
         try:
@@ -1193,18 +1200,18 @@ def initialize(console_logging=True):
         FOOTER_TIME_LAYOUT = check_setting_int(CFG, 'GUI', 'footer_time_layout', 0)
         POSTER_SORTBY = check_setting_str(CFG, 'GUI', 'poster_sortby', 'name')
         POSTER_SORTDIR = check_setting_int(CFG, 'GUI', 'poster_sortdir', 1)
-        DISPLAY_SHOW_VIEWMODE = check_setting_int(CFG, 'GUI', 'display_show_viewmode', 0)
-        DISPLAY_SHOW_BACKGROUND = bool(check_setting_int(CFG, 'GUI', 'display_show_background', 0))
+        DISPLAY_SHOW_VIEWMODE = check_setting_int(CFG, 'GUI', 'display_show_viewmode', 2)
+        DISPLAY_SHOW_BACKGROUND = bool(check_setting_int(CFG, 'GUI', 'display_show_background', 1))
         DISPLAY_SHOW_BACKGROUND_TRANSLUCENT = bool(check_setting_int(
-            CFG, 'GUI', 'display_show_background_translucent', 0))
+            CFG, 'GUI', 'display_show_background_translucent', 1))
         DISPLAY_SHOW_VIEWART = check_setting_int(CFG, 'GUI', 'display_show_viewart', 0)
         DISPLAY_SHOW_MINIMUM = bool(check_setting_int(CFG, 'GUI', 'display_show_minimum', 1))
         DISPLAY_SHOW_SPECIALS = bool(check_setting_int(CFG, 'GUI', 'display_show_specials', 0))
 
-        EPISODE_VIEW_VIEWMODE = check_setting_int(CFG, 'GUI', 'episode_view_viewmode', 0)
-        EPISODE_VIEW_BACKGROUND = bool(check_setting_int(CFG, 'GUI', 'episode_view_background', 0))
+        EPISODE_VIEW_VIEWMODE = check_setting_int(CFG, 'GUI', 'episode_view_viewmode', 2)
+        EPISODE_VIEW_BACKGROUND = bool(check_setting_int(CFG, 'GUI', 'episode_view_background', 1))
         EPISODE_VIEW_BACKGROUND_TRANSLUCENT = bool(check_setting_int(
-            CFG, 'GUI', 'episode_view_background_translucent', 0))
+            CFG, 'GUI', 'episode_view_background_translucent', 1))
         EPISODE_VIEW_LAYOUT = check_setting_str(CFG, 'GUI', 'episode_view_layout', 'daybyday')
         EPISODE_VIEW_SORT = check_setting_str(CFG, 'GUI', 'episode_view_sort', 'time')
         EPISODE_VIEW_DISPLAY_PAUSED = bool(check_setting_int(CFG, 'GUI', 'episode_view_display_paused', 1))
@@ -1459,6 +1466,23 @@ def initialize(console_logging=True):
             cycleTime=datetime.timedelta(minutes=PLEX_WATCHEDSTATE_FREQUENCY),
             run_delay=datetime.timedelta(minutes=5),
             threadName='PLEXWATCHEDSTATE')
+
+        try:
+            import _scandir
+        except ImportError:
+            _scandir = None
+
+        try:
+            import ctypes
+        except ImportError:
+            ctypes = None
+
+        if None is not _scandir and None is not ctypes and not getattr(_scandir, 'DirEntry', None):
+            MODULE_UPDATE_STRING = \
+                'Your scandir binary module is outdated, using the slow but newer Python module.' \
+                '<br>Upgrade the binary at a command prompt with' \
+                ' # <span class="boldest">python -m pip install -U scandir</span>' \
+                '<br>Important: You <span class="boldest">must</span> Shutdown SickGear before upgrading'
 
         __INITIALIZED__ = True
         return True
@@ -1958,7 +1982,8 @@ def save_config():
         cfg_keys += [cfg]
         new_config[cfg] = {}
         for (k, v) in filter(lambda (_, y): any([y]) or (
-                cfg_lc in ('kodi', 'xbmc', 'synoindex') and _ in ('always_on',)), items):
+                # allow saving where item value default is non-zero but 0 is a required setting value
+                cfg_lc in ('kodi', 'xbmc', 'synoindex', 'nzbget') and _ in ('always_on', 'priority')), items):
             k = '%s' in k and (k % cfg_lc) or (cfg_lc + '_' + k)
             # correct for cases where keys are named in an inconsistent manner to parent stanza
             k = k.replace('blackhole_', '').replace('sabnzbd_', 'sab_')

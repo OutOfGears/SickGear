@@ -288,7 +288,7 @@ class TVShow(object):
         if ek.ek(os.path.isdir, self._location):
             return self._location
         else:
-            raise exceptions.ShowDirNotFoundException('Show folder doesn\'t exist, you shouldn\'t be using it')
+            raise exceptions.ShowDirNotFoundException('Show folder does not exist: \'%s\'' % self._location)
 
     def _setLocation(self, newLocation):
         logger.log('Setter sets location to %s' % newLocation, logger.DEBUG)
@@ -636,7 +636,7 @@ class TVShow(object):
                     curEp.deleteEpisode()
 
                 curEp.loadFromDB(curSeason, curEpisode)
-                curEp.loadFromIndexer(tvapi=t, cachedSeason=cachedSeasons[curSeason], update=update)
+                curEp.loadFromIndexer(tvapi=t, cachedSeason=cachedSeasons.get(curSeason), update=update)
                 scannedEps[curSeason][curEpisode] = True
             except exceptions.EpisodeDeletedException:
                 logger.log('Tried loading an episode from [%s] from the DB that should have been deleted, skipping it' % self.name,
@@ -1000,7 +1000,7 @@ class TVShow(object):
         sqlResults = myDB.select('SELECT * FROM imdb_info WHERE indexer_id = ?', [self.indexerid])
 
         if 0 < len(sqlResults):
-            self.imdb_info = dict(zip(sqlResults[0].keys(), sqlResults[0]))
+            self.imdb_info = dict(zip(sqlResults[0].keys(), [(r, '')[None is r] for r in sqlResults[0]]))
         elif sickbeard.USE_IMDB_INFO:
             logger.log('%s: The next show update will attempt to find IMDb info for [%s]' %
                        (self.indexerid, self.name), logger.DEBUG)
@@ -1615,34 +1615,7 @@ class TVShow(object):
         return False
 
     def getOverview(self, epStatus):
-
-        status, quality = Quality.splitCompositeStatus(epStatus)
-        if ARCHIVED == status:
-            return Overview.GOOD
-        if WANTED == status:
-            return Overview.WANTED
-        if status in (SKIPPED, IGNORED):
-            return Overview.SKIPPED
-        if status in (UNAIRED, UNKNOWN):
-            return Overview.UNAIRED
-        if status in [SUBTITLED] + Quality.SNATCHED_ANY + Quality.DOWNLOADED + Quality.FAILED:
-
-            if FAILED == status:
-                return Overview.WANTED
-            if status in SNATCHED_ANY:
-                return Overview.SNATCHED
-
-            void, best_qualities = Quality.splitQuality(self.quality)
-            # if re-downloads aren't wanted then mark it "good" if there is anything
-            if not len(best_qualities):
-                return Overview.GOOD
-
-            min_best, max_best = min(best_qualities), max(best_qualities)
-            if quality >= max_best \
-                    or (self.upgrade_once and
-                        (quality in best_qualities or (None is not min_best and quality > min_best))):
-                return Overview.GOOD
-            return Overview.QUAL
+        return helpers.getOverview(epStatus, self.quality, self.upgrade_once)
 
     def __getstate__(self):
         d = dict(self.__dict__)

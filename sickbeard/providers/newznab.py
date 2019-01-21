@@ -33,7 +33,7 @@ from . import generic
 from sickbeard import classes, db, helpers, logger, tvcache
 from sickbeard.common import neededQualities, Quality, DOWNLOADED, SNATCHED, SNATCHED_PROPER, SNATCHED_BEST
 from sickbeard.exceptions import AuthException, MultipleShowObjectsException
-from sickbeard.helpers import tryInt
+from sickbeard.helpers import tryInt, remove_non_release_groups
 from sickbeard.indexers.indexer_config import *
 from sickbeard.network_timezones import sb_timezone
 from sickbeard.sbdatetime import sbdatetime
@@ -94,9 +94,13 @@ class NewznabConstants:
 
     SERVER_DEFAULT = 0
     SERVER_SPOTWEB = 1
+    SERVER_HYDRA1 = 2
+    SERVER_HYDRA2 = 3
 
     server_types = {SERVER_DEFAULT: 'newznab',
-                    SERVER_SPOTWEB: 'spotweb'}
+                    SERVER_SPOTWEB: 'spotweb',
+                    SERVER_HYDRA1: 'NZBHydra',
+                    SERVER_HYDRA2: 'NZBHydra 2'}
 
     def __init__(self):
         pass
@@ -194,6 +198,8 @@ class NewznabProvider(generic.NZBProvider):
 
     def image_name(self):
 
+        if self.server_type not in (NewznabConstants.SERVER_DEFAULT, NewznabConstants.SERVER_SPOTWEB):
+            return 'warning16.png'
         return generic.GenericProvider.image_name(
             self, ('newznab', 'spotweb')[self.server_type == NewznabConstants.SERVER_SPOTWEB])
 
@@ -235,12 +241,21 @@ class NewznabProvider(generic.NZBProvider):
         cats = {}
         all_cats = []
         xml_caps = self._get_caps_data()
+        old_api = False
         if None is not xml_caps:
             server_node = xml_caps.find('.//server')
             if None is not server_node:
-                self.server_type = (NewznabConstants.SERVER_DEFAULT, NewznabConstants.SERVER_SPOTWEB)[
-                    NewznabConstants.server_types.get(NewznabConstants.SERVER_SPOTWEB) in
-                    (server_node.get('type', '') or server_node.get('title', '')).lower()]
+                if NewznabConstants.server_types.get(NewznabConstants.SERVER_SPOTWEB) in \
+                        (server_node.get('type', '') or server_node.get('title', '')).lower():
+                    self.server_type = NewznabConstants.SERVER_SPOTWEB
+                elif 'nzbhydra 2' in server_node.get('title', '').lower() or \
+                        'nzbhydra2' in server_node.get('url', '').lower():
+                    self.server_type = NewznabConstants.SERVER_HYDRA2
+                elif 'nzbhydra' == server_node.get('title', '').lower().strip() or \
+                         server_node.get('url', '').lower().strip().endswith('nzbhydra'):
+                    self.server_type = NewznabConstants.SERVER_HYDRA1
+                else:
+                    self.server_type = NewznabConstants.SERVER_DEFAULT
 
             tv_search = xml_caps.find('.//tv-search')
             if None is not tv_search:
@@ -248,6 +263,10 @@ class NewznabProvider(generic.NZBProvider):
                     k = NewznabConstants.searchTypes.get(c)
                     if k:
                         caps[k] = c
+                # for very old newznab, just add text search as only option
+                if not tv_search.get('supportedParams'):
+                    caps[NewznabConstants.searchTypes['q']] = 'q'
+                    old_api = True
 
             limit = xml_caps.find('.//limits')
             if None is not limit:
@@ -285,16 +304,17 @@ class NewznabProvider(generic.NZBProvider):
         if self.enabled:
             self._caps_last_updated = datetime.datetime.now()
 
-        if not caps and self.get_id() not in ['sick_beard_index']:
-            caps[INDEXER_TVDB] = 'tvdbid'
+        if not old_api and (self.url and 'nzbplanet.net' not in self.url.lower()):
+            if not caps and self.get_id() not in ['sick_beard_index']:
+                caps[INDEXER_TVDB] = 'tvdbid'
+            if NewznabConstants.SEARCH_SEASON not in caps or not caps.get(NewznabConstants.SEARCH_SEASON):
+                caps[NewznabConstants.SEARCH_SEASON] = 'season'
+            if NewznabConstants.SEARCH_EPISODE not in caps or not caps.get(NewznabConstants.SEARCH_EPISODE):
+                caps[NewznabConstants.SEARCH_TEXT] = 'ep'
+            if (INDEXER_TVRAGE not in caps or not caps.get(INDEXER_TVRAGE)) and self.get_id() not in ['sick_beard_index']:
+                caps[INDEXER_TVRAGE] = 'rid'
         if NewznabConstants.SEARCH_TEXT not in caps or not caps.get(NewznabConstants.SEARCH_TEXT):
             caps[NewznabConstants.SEARCH_TEXT] = 'q'
-        if NewznabConstants.SEARCH_SEASON not in caps or not caps.get(NewznabConstants.SEARCH_SEASON):
-            caps[NewznabConstants.SEARCH_SEASON] = 'season'
-        if NewznabConstants.SEARCH_EPISODE not in caps or not caps.get(NewznabConstants.SEARCH_EPISODE):
-            caps[NewznabConstants.SEARCH_TEXT] = 'ep'
-        if (INDEXER_TVRAGE not in caps or not caps.get(INDEXER_TVRAGE)) and self.get_id() not in ['sick_beard_index']:
-            caps[INDEXER_TVRAGE] = 'rid'
 
         if NewznabConstants.CAT_HD not in cats or not cats.get(NewznabConstants.CAT_HD):
             cats[NewznabConstants.CAT_HD] = (['5040'], ['5040', '5090'])['nzbs_org' == self.get_id()]
@@ -471,6 +491,7 @@ class NewznabProvider(generic.NZBProvider):
     def _title_and_url(self, item):
         title, url = None, None
         try:
+            url = str(item.findtext('link')).replace('&amp;', '&')
             title = ('%s' % item.findtext('title')).strip()
             title = re.sub(r'\s+', '.', title)
             # remove indexer specific release name parts
@@ -482,7 +503,8 @@ class NewznabProvider(generic.NZBProvider):
                     if re.search(pattern, title):
                         r_found = True
                         title = re.sub(pattern, repl, title)
-            url = str(item.findtext('link')).replace('&amp;', '&')
+            parts = re.findall('(.*(?:(?:h.?|x)26[45]|vp9|av1|xvid|divx)[^-]*)(.*)', title, re.I)[0]
+            title = '%s-%s' % (parts[0], remove_non_release_groups(parts[1].split('-')[1]))
         except (StandardError, Exception):
             pass
 

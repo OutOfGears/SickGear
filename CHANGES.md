@@ -1,4 +1,155 @@
-﻿### 0.17.11 (2018-10-14 18:43:00 UTC)
+﻿### 0.18.10 (2019-01-11 14:00:00 UTC)
+
+* Fix using ampersand with find show search input
+
+
+### 0.18.9 (2019-01-08 01:00:00 UTC)
+
+* Change ensure utf-8 locale for Ubuntu snap
+* Change remove non-release group stuff from newnab results
+* Add detection of NZBHydra and NZBHydra 2 to config providers
+* Remove Torrentz2
+
+
+### 0.18.8 (2018-12-18 21:00:00 UTC)
+
+* Change first run GUI defaults to enable fanart and episode view as home
+* Fix an issue in the Travis CI test system used by GitHub
+* Fix potential issue parsing IMDb response
+* Update IMDb-pie 5.6.3 (df7411d1) to 5.6.3 (4220e83)
+
+
+### 0.18.7 (2018-12-14 01:00:00 UTC)
+
+* Fix saving NZBGet priority to Normal
+* Change hide "More results" between add show searches
+
+
+### 0.18.6 (2018-12-12 19:30:00 UTC)
+
+* Change to public IMDb lists is now handled when adding a list
+* Change IMDb cards view to feedback when a list has no TV shows
+* Change IMDb cards view to include TV Mini Series
+* Change add "list more" to list choices on IMDb cards view
+* Change IMDb requests to be https
+
+
+### 0.18.5 (2018-12-10 12:15:00 UTC)
+
+* Change all nzb provider requests to 60s timeout
+* Fix encode str to unicode for get_UWRatio
+* Fix decode given show in add show as 'utf-8' into unicode
+* Change improve UI to account for docker/snap installations
+* Fix snap startup permissions issue
+* Change providers on first run to be alphabetically listed and grouped usenet, torrent, anime
+* Change suppress the redundant first run dateutil zoneinfo warning
+* Update CFScrape 1.6.8 (be0a536) to custom 1.9.5 (be0a536)
+* Update pyjsparser 2.4.5 (cd5b829) to 2.4.5 (39b468e)
+* Update Js2Py 0.43 (c1442f1) to 0.43 (da310bb)
+* Change it's the time of year to wear a fluffy hat
+
+
+### 0.18.4 (2018-12-04 15:45:00 UTC)
+
+* Fix "Test Emby" notifications output when there are not enough API keys for hosts
+* Change About page to include current base @ version number
+* Change handle when a known season is deleted from indexer but ep data is not deletable locally
+
+
+### 0.18.3 (2018-12-01 17:35:00 UTC)
+
+* Add Milkie torrent provider
+
+
+### 0.18.2 (2018-11-30 21:15:00 UTC)
+
+* Remove AlphaReign torrent provider
+* Change minimise library update calls to Kodi and Plex
+
+
+### 0.18.1 (2018-11-28 15:35:00 UTC)
+
+* Fix manual search button on Daily Schedule
+
+
+### 0.18.0 (2018-11-26 19:30:00 UTC)
+
+* Update Beautiful Soup 4.6.0 (r449) to 4.6.3 (r475)
+* Update CacheControl library 0.12.4 (bd94f7e) to 0.12.5 (cd91309)
+* Update Certifi 2018.01.18 (e225253) to 2018.08.24 (8be9f89)
+* Update dateutil module 2.7.2 (ff03c0f) to 2.7.2 (49690ee)
+* Update feedparser 5.2.1 (5646f4c) to 5.2.1 (2b11c80)
+* Update profilehooks module 1.10.0 (0ce1e29) to 1.10.1 (fdbf19d)
+* Update PySocks 1.6.8 (524ceb4) to 1.6.8 (b687a34)
+* Update Requests library 2.15.1 (282b01a) to 2.19.1 (2c6a842)
+* Update scandir module 1.6 (c3592ee) to 1.9.0 (9ab3d1f)
+* Update SimpleJSON 3.13.2 (6ffddbe) to 3.16.0 (e2a54f7)
+* Update Tornado Web Server 5.0.1 (2b2a220a) to 5.1.1 (cc2cf07)
+* Update unidecode module 1.0.22 (81f938d) to 1.0.22 (578cdb9)
+* Update UnRar for Windows 5.60 to 5.61
+* Add idna library 2.7 (0f50bdc)
+* Add urllib3 release 1.23 (7c216f4)
+* Change if old scandir binary module is installed, fallback to slow Python module and inform user to upgrade binary
+* Change site services tester to fallback to http if error with SSL
+* Change postprocessor try to use folder name when filename does not contain show name
+* Change force redirects in TVMaze API to be https
+* Add display first 20 results in "Add show" view with a link to display more
+* Add search results sort by Z to A to "Add show" view
+* Add search results sort by newest aired to "Add show" view
+* Add search results sort by oldest aired to "Add show" view
+* Change requirements.txt Cheetah >= 3.1.0
+* Add bB torrent provider
+* Add Snowfl torrent provider
+* Fix manual search button on displayShow and episode view page
+* Change feedback result of manual search on the clicked button image/tooltip
+* Change reduce browser I/O on displayShow
+* Fix displayShow bug where click holding on a season btn and then dragging away leaves 50% white
+* Change Show List text "Search Show Name" to "Filter Show Name", and "Reset Search" to "Reset Filter" for clarity
+* Change when getting a non existing folder, add the failed location to log messages
+* Change add pulsing effect to warning indicators in navbar
+* Add show search ability to menu Shows/"Add show"
+* Change simplify options on final step of Add show
+* Add quick set suggestion statuses in Episode Status Manager. Helpful for orphan "Snatches", or changes to "Skipped" etc.
+* Change DisplayShow manual search button busy animation
+* Add history view layouts to "Shows" menu
+* Add a current layout indicator to "Shows"/"History" menu item
+* Add the five last added shows to "Shows" menu under item "[1/2]"
+* Change relabel ui "Episode Schedule" and "Episode View" to "Daily Schedule"
+* Change displayShow, move table header sorting chevron images from right side of column to before text
+* Change displayShow, move plotinfo from right side of name column to before the episode text
+* Fix use correct columns for sorting on displayShow
+* Fix sort by episode number on displayShow
+* Change add images for manual search finished on displayShow to indicate completed fully (green) or low quality (bronze)
+* Change improve image sizes to reduce page overhead
+* Fix make release group comparison for proper/repack search case insensitive
+
+
+### 0.17.15 (2018-11-24 20:30:00 UTC)
+
+* Fix pruning large watch lists
+* Add Ubuntu snap installer
+
+
+### 0.17.14 (2018-11-15 08:00:00 UTC)
+
+* Change remove required restart of SickGear after changing label or path settings for rTorrent and qBittorrent
+
+
+### 0.17.13 (2018-11-08 21:12:00 UTC)
+
+* Fix add filter to data used for alternative scene episode numbers
+* Change don't enable "Scene numbering" for shows without alternative scene episode numbers
+* Change label/summary of editShow/Search/"Scene numbering" to "Editable episode numbers" to improve clarity for its use
+* Change improve summary of addShow/Finally/"Scene numbering"
+* Change improve displayShow tooltips for editable episode number fields
+
+
+### 0.17.12 (2018-10-23 19:50:00 UTC)
+
+* Change add text search as default for old newznab without supportedParams caps parameter
+
+
+### 0.17.11 (2018-10-14 18:43:00 UTC)
 
 * Fix post process "Permission denied" caused by removing the !sync file too early in onTxComplete
 * Change onTxComplete copy files logic to mitigate potential issues
@@ -72,6 +223,8 @@
 
 ### 0.17.0 (2018-08-24 23:40:00 UTC)
 
+* Add ability to set episodes to suggested statuses in Episode Status Manager. Useful for orphaned "Snatches" or to undo
+  change to "Skipped", "Ignored", or "Wanted" to a previously known quality
 * Change save config values only where reqd. reduces file by up to 75%
 * Add 'Map an NZBGet "DestDir"' setting to config/Search/NZB Results tab (select NZBGet)
 * Add TVDB, TheXem, and GitHub buttons to page History/Layout "Provider fails" that fetches a site Up/Down report

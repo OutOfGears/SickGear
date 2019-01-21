@@ -30,13 +30,13 @@ __all__ = [
     # usenet
     'omgwtfnzbs',
     # torrent
-    'alpharatio', 'alphareign', 'beyondhd', 'bithdtv', 'blutopia', 'btn',
+    'alpharatio', 'bb', 'beyondhd', 'bithdtv', 'blutopia', 'btn',
     'custom01', 'custom11', 'dh', 'ettv', 'eztv', 'fano', 'filelist', 'funfile', 'grabtheinfo',
     'hdbits', 'hdme', 'hdspace', 'hdtorrents', 'horriblesubs',
-    'immortalseed', 'iptorrents', 'limetorrents', 'magnetdl', 'morethan', 'nebulance', 'ncore', 'nyaa',
+    'immortalseed', 'iptorrents', 'limetorrents', 'magnetdl', 'milkie', 'morethan', 'nebulance', 'ncore', 'nyaa',
     'pisexy', 'potuk', 'pretome', 'privatehd', 'ptf',
-    'rarbg', 'revtt', 'scenehd', 'scenetime', 'shazbat', 'showrss', 'skytorrents', 'speedcd',
-    'thepiratebay', 'torlock', 'torrentday', 'torrenting', 'torrentleech',  'torrentz2', 'tvchaosuk',
+    'rarbg', 'revtt', 'scenehd', 'scenetime', 'shazbat', 'showrss', 'skytorrents', 'snowfl', 'speedcd',
+    'thepiratebay', 'torlock', 'torrentday', 'torrenting', 'torrentleech',  'tvchaosuk',
     'wop', 'xspeeds', 'zooqle',
     # anime
     'anizb', 'tokyotoshokan',
@@ -62,6 +62,14 @@ def sortedProviderList():
         if curModule in providerDict:
             newList.append(providerDict[curModule])
 
+    if not sickbeard.PROVIDER_ORDER:
+        nzb = filter(lambda p: p.providerType == generic.GenericProvider.NZB, providerDict.values())
+        tor = filter(lambda p: p.providerType != generic.GenericProvider.NZB, providerDict.values())
+        newList = sorted(filter(lambda p: not p.anime_only, nzb), key=lambda v: v.get_id()) + \
+            sorted(filter(lambda p: not p.anime_only, tor), key=lambda v: v.get_id()) + \
+            sorted(filter(lambda p: p.anime_only, nzb), key=lambda v: v.get_id()) + \
+            sorted(filter(lambda p: p.anime_only, tor), key=lambda v: v.get_id())
+
     # add any modules that are missing from that list
     for curModule in providerDict:
         if providerDict[curModule] not in newList:
@@ -73,7 +81,7 @@ def sortedProviderList():
 def makeProviderList():
     providers = [x.provider for x in [getProviderModule(y) for y in __all__] if x]
     import browser_ua, zlib
-    headers = [1449593765]
+    headers = [1449593765, 1597250020]
     for p in providers:
         if abs(zlib.crc32(p.name)) + 40000400 in headers:
             p.headers.update({'User-Agent': browser_ua.get_ua()})
